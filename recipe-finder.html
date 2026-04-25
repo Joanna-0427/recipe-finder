@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recipe Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#E8611A;--orange-light:#F4874B;--orange-dark:#C04D0E;
+  --brown:#5C3317;--cream:#FDF6EC;--green:#4A7C59;--green-light:#6BAF7E;
+  --card-shadow:0 4px 20px rgba(92,51,23,0.10);
+  --transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:#2D1B0E;min-height:100vh}
+.header{background:linear-gradient(135deg,var(--orange-dark) 0%,var(--orange) 60%,var(--orange-light) 100%);padding:28px 24px 32px;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:rgba(255,255,255,0.07);border-radius:50%}
+.header-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;z-index:1}
+.header-title{display:flex;align-items:center;gap:12px}
+.header-title h1{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.2rem);color:#fff}
+.header-sub{color:rgba(255,255,255,0.85);font-size:0.88rem;margin-top:4px}
+.header-hint{color:rgba(255,255,255,0.7);font-size:0.8rem;margin-top:2px}
+.add-btn{background:#fff;color:var(--orange-dark);border:none;padding:10px 18px;border-radius:30px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.9rem;cursor:pointer;transition:var(--transition)}
+.add-btn:hover{background:var(--cream);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.main{max-width:960px;margin:0 auto;padding:24px 16px 60px}
+.search-section{margin-bottom:20px}
+.search-label{font-weight:600;font-size:0.85rem;color:var(--brown);margin-bottom:8px}
+.search-wrap{position:relative}
+.search-input{width:100%;padding:14px 48px 14px 46px;border:2px solid #E8D5C4;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:#fff;color:#2D1B0E;transition:var(--transition);outline:none}
+.search-input:focus{border-color:var(--orange);box-shadow:0 0 0 4px rgba(232,97,26,0.1)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--orange);font-size:1.2rem;pointer-events:none}
+.search-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;font-size:1.1rem;cursor:pointer;padding:4px;border-radius:50%;transition:var(--transition)}
+.search-clear:hover{color:var(--orange-dark)}
+.search-tip{font-size:0.78rem;color:#a07858;margin-top:6px}
+.search-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(232,97,26,0.1);border:1px solid rgba(232,97,26,0.25);color:var(--orange-dark);padding:5px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;margin-top:8px}
+.search-badge button{background:none;border:none;cursor:pointer;color:var(--orange-dark);font-size:0.9rem;padding:0 0 0 4px}
+.filter-section{margin-bottom:20px}
+.filter-label{font-weight:600;font-size:0.85rem;color:var(--brown);margin-bottom:8px}
+.filter-wrap{display:flex;flex-wrap:wrap;gap:8px}
+.filter-btn{padding:8px 16px;border-radius:25px;border:2px solid #D4B896;background:#fff;color:var(--brown);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:var(--transition)}
+.filter-btn:hover{border-color:var(--orange);color:var(--orange-dark)}
+.filter-btn.active{background:var(--orange);border-color:var(--orange);color:#fff}
+.filter-btn.active-fav{background:var(--green);border-color:var(--green);color:#fff}
+.results-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.results-count{font-size:0.9rem;color:var(--brown)}
+.results-count strong{color:var(--orange-dark);font-size:1.1rem;font-weight:700;font-family:'Playfair Display',serif}
+.click-hint{font-size:0.8rem;color:#b08060;background:rgba(232,97,26,0.06);padding:6px 12px;border-radius:8px;border:1px solid rgba(232,97,26,0.12)}
+.cards-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:560px){.cards-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:800px){.cards-grid{grid-template-columns:1fr 1fr 1fr}}
+.card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:var(--card-shadow);cursor:pointer;transition:var(--transition);animation:fadeUp 0.35s ease both}
+.card:hover{transform:translateY(-4px);box-shadow:0 10px 32px rgba(92,51,23,0.16)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.card-img{height:110px;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative}
+.fav-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.9);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:var(--transition);box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.fav-btn:hover{transform:scale(1.15)}
+.card-body{padding:14px}
+.card-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#2D1B0E;margin-bottom:6px;line-height:1.3}
+.card-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.card-time{font-size:0.78rem;color:#8a6548}
+.diff-badge{font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.diff-easy{background:#D4EDDA;color:#2E7D32}
+.diff-medium{background:#FFF3CD;color:#856404}
+.diff-hard{background:#F8D7DA;color:#721C24}
+.card-ings{font-size:0.78rem;color:#7a5c42;margin-bottom:8px}
+.card-ings strong{font-weight:600;text-transform:uppercase;font-size:0.7rem;letter-spacing:0.5px;display:block;margin-bottom:2px}
+.diet-tags{display:flex;flex-wrap:wrap;gap:4px}
+.diet-tag{font-size:0.68rem;padding:2px 7px;border-radius:8px;background:#E8F5E9;color:var(--green);font-weight:500}
+.diet-tag.vegan{background:#E3F2FD;color:#1565C0}
+.diet-tag.gluten-free{background:#FFF8E1;color:#E65100}
+.diet-tag.dairy-free{background:#F3E5F5;color:#7B1FA2}
+.show-more-wrap{text-align:center;margin-top:28px}
+.show-more-btn{background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border:none;padding:14px 32px;border-radius:30px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;transition:var(--transition);box-shadow:0 4px 14px rgba(232,97,26,0.3)}
+.show-more-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(232,97,26,0.4)}
+.empty-state{text-align:center;padding:48px 24px;color:var(--brown)}
+.empty-state .empty-icon{font-size:4rem;margin-bottom:16px}
+.empty-state h3{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:8px}
+.empty-state p{font-size:0.9rem;color:#a07858;margin-bottom:16px}
+.reset-btn{background:none;border:2px solid var(--orange);color:var(--orange-dark);padding:8px 20px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;transition:var(--transition)}
+.reset-btn:hover{background:var(--orange);color:#fff}
+.modal-overlay{position:fixed;inset:0;background:rgba(45,27,14,0.6);backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:24px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1)}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{padding:24px 24px 16px;position:relative}
+.modal-emoji{font-size:4rem;text-align:center;display:block;margin-bottom:12px}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.5rem;text-align:center;color:#2D1B0E}
+.modal-meta{display:flex;justify-content:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--cream);border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.modal-close:hover{background:#f0ddd0}
+.modal-fav{position:absolute;top:16px;left:16px;background:var(--cream);border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.modal-fav:hover{transform:scale(1.1)}
+.modal-body{padding:0 24px 24px}
+.modal-section{margin-bottom:18px}
+.modal-section h4{font-weight:700;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.8px;color:var(--brown);margin-bottom:8px}
+.modal-section ul{list-style:none;display:flex;flex-direction:column;gap:4px}
+.modal-section ul li{padding:5px 0 5px 16px;position:relative;font-size:0.9rem;color:#3d2010;border-bottom:1px solid #f5eee8}
+.modal-section ul li::before{content:'•';position:absolute;left:0;color:var(--orange)}
+.modal-section p{font-size:0.9rem;color:#4a2e18;line-height:1.7}
+.hidden{display:none}
+.add-modal{max-width:480px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-weight:600;font-size:0.83rem;color:var(--brown);margin-bottom:5px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:2px solid #E8D5C4;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:var(--transition);background:#fff;color:#2D1B0E}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--orange)}
+.form-group textarea{height:80px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-checkboxes{display:flex;flex-wrap:wrap;gap:8px}
+.form-checkboxes label{display:flex;align-items:center;gap:5px;font-size:0.83rem;cursor:pointer;color:var(--brown)}
+.submit-btn{width:100%;background:linear-gradient(135deg,var(--orange),var(--orange-light));color:#fff;border:none;padding:12px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:var(--transition);margin-top:6px}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(232,97,26,0.35)}
+.emoji-picker{display:flex;flex-wrap:wrap;gap:6px}
+.emoji-opt{font-size:1.3rem;padding:5px 7px;border:2px solid #E8D5C4;border-radius:8px;background:#fff;cursor:pointer;transition:var(--transition)}
+.emoji-opt.selected{border-color:var(--orange);background:rgba(232,97,26,0.08)}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div>
+      <div class="header-title"><span style="font-size:2rem">🍽️</span><h1>Recipe Finder</h1></div>
+      <div class="header-sub">Search recipes by ingredients you have at home</div>
+      <div class="header-hint">💡 Type ingredients, filter by diet, or browse all recipes</div>
+    </div>
+    <button class="add-btn" onclick="openAddModal()">＋ Add Recipe</button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="search-section">
+    <div class="search-label">🔍 Search by Ingredients</div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Try: chicken, rice, tomatoes..." oninput="handleSearch()">
+      <button class="search-clear hidden" id="searchClear" onclick="clearSearch()">✕</button>
+    </div>
+    <div class="search-tip">💡 Tip: Enter one or more ingredients separated by commas. Results update as you type.</div>
+    <div id="searchBadge" class="hidden" style="margin-top:8px"></div>
+  </div>
+
+  <div class="filter-section">
+    <div class="filter-label">🏷 Filter by Dietary Preferences</div>
+    <div class="filter-wrap">
+      <button class="filter-btn" id="btn-fav" onclick="toggleFav()">🤍 My Favorites</button>
+      <button class="filter-btn" id="btn-vegetarian" onclick="toggleFilter('vegetarian')">🥬 Vegetarian</button>
+      <button class="filter-btn" id="btn-vegan" onclick="toggleFilter('vegan')">🌱 Vegan</button>
+      <button class="filter-btn" id="btn-gluten-free" onclick="toggleFilter('gluten-free')">🌾 Gluten-Free</button>
+      <button class="filter-btn" id="btn-dairy-free" onclick="toggleFilter('dairy-free')">🥛 Dairy-Free</button>
+    </div>
+  </div>
+
+  <div class="results-bar">
+    <div class="results-count">Found <strong id="resultsCount">0</strong> recipes</div>
+    <div class="click-hint">👆 Click any recipe card to view full details</div>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid"></div>
+  <div id="emptyState" class="empty-state hidden">
+    <div class="empty-icon">🍽️</div>
+    <h3>No recipes found</h3>
+    <p id="emptyMsg">Try different ingredients or remove some filters.</p>
+    <button class="reset-btn" onclick="resetAll()">🔄 Show All Recipes</button>
+  </div>
+  <div class="show-more-wrap hidden" id="showMoreWrap">
+    <button class="show-more-btn" onclick="showMore()">🍴 Load 8 More Recipes (<span id="remainingCount">0</span> remaining)</button>
+  </div>
+</main>
+
+<!-- Recipe Detail Modal -->
+<div class="modal-overlay hidden" id="detailModal" onclick="closeModal('detailModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <button class="modal-fav" id="modalFavBtn" onclick="toggleFavById()">🤍</button>
+      <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+      <span class="modal-emoji" id="modalEmoji"></span>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-meta" id="modalMeta"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h4>📝 Ingredients</h4>
+        <ul id="modalIngredients"></ul>
+      </div>
+      <div class="modal-section">
+        <h4>👨‍🍳 Instructions</h4>
+        <p id="modalInstructions"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Recipe Modal -->
+<div class="modal-overlay hidden" id="addModal" onclick="closeModal('addModal')">
+  <div class="modal add-modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+      <div class="modal-title" style="text-align:left;font-size:1.3rem">➕ Add New Recipe</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Choose Emoji</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+      </div>
+      <div class="form-group"><label>Recipe Name *</label><input id="inp-title" type="text" placeholder="e.g. Grandma's Pasta"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Cook Time</label><input id="inp-time" type="text" placeholder="30 mins"></div>
+        <div class="form-group"><label>Difficulty</label>
+          <select id="inp-diff"><option>Easy</option><option>Medium</option><option>Hard</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label>Ingredients * (comma-separated)</label><input id="inp-ings" type="text" placeholder="pasta, eggs, cheese..."></div>
+      <div class="form-group"><label>Instructions</label><textarea id="inp-instr" placeholder="Describe how to make this recipe..."></textarea></div>
+      <div class="form-group"><label>Dietary Tags</label>
+        <div class="form-checkboxes">
+          <label><input type="checkbox" id="chk-veg"> Vegetarian</label>
+          <label><input type="checkbox" id="chk-vegan"> Vegan</label>
+          <label><input type="checkbox" id="chk-gf"> Gluten-Free</label>
+          <label><input type="checkbox" id="chk-df"> Dairy-Free</label>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="addRecipe()">🍽️ Add Recipe</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RECIPES = [
+  {id:1,emoji:"🍝",title:"Classic Spaghetti Carbonara",time:"25 mins",diff:"Medium",ings:["spaghetti","eggs","bacon","parmesan","black pepper"],diet:[],instructions:"Cook spaghetti per package. Fry bacon until crispy. Whisk eggs with parmesan. Off heat, toss pasta with egg mix and bacon, adding pasta water for creaminess."},
+  {id:2,emoji:"🥗",title:"Mediterranean Quinoa Bowl",time:"20 mins",diff:"Easy",ings:["quinoa","cucumber","tomatoes","olive oil","feta","lemon"],diet:["vegetarian"],instructions:"Cook quinoa, let cool. Dice cucumber and tomatoes. Mix everything with olive oil and lemon. Top with feta."},
+  {id:3,emoji:"🍛",title:"Thai Red Curry",time:"35 mins",diff:"Medium",ings:["chicken","coconut milk","red curry paste","bell peppers","rice","basil"],diet:["gluten-free"],instructions:"Sauté curry paste. Add chicken, cook through. Pour in coconut milk, add veggies. Simmer 15 mins. Serve over rice."},
+  {id:4,emoji:"🥦",title:"Vegetable Stir Fry",time:"15 mins",diff:"Easy",ings:["broccoli","carrots","soy sauce","garlic","ginger","tofu","rice"],diet:["vegetarian","vegan"],instructions:"Stir-fry garlic and ginger. Add vegetables and tofu. Toss with soy sauce until tender-crisp. Serve over rice."},
+  {id:5,emoji:"🍲",title:"Lentil Soup",time:"45 mins",diff:"Easy",ings:["lentils","onion","tomatoes","cumin","coriander","lemon","spinach"],diet:["vegetarian","vegan","gluten-free","dairy-free"],instructions:"Sauté onions. Add spices. Add lentils, tomatoes, and water. Simmer 30 mins. Stir in spinach and lemon."},
+  {id:6,emoji:"🍳",title:"Eggs Benedict",time:"30 mins",diff:"Hard",ings:["eggs","english muffins","canadian bacon","butter","lemon"],diet:[],instructions:"Toast muffins, fry bacon. Make hollandaise. Poach eggs. Assemble and top with sauce."},
+  {id:7,emoji:"🌮",title:"Black Bean Tacos",time:"20 mins",diff:"Easy",ings:["black beans","tortillas","avocado","lime","cilantro","cumin","onion"],diet:["vegetarian","vegan","dairy-free"],instructions:"Season beans with cumin. Warm tortillas. Fill with beans, avocado, onion, cilantro, and lime."},
+  {id:8,emoji:"🍜",title:"Chicken Ramen",time:"40 mins",diff:"Medium",ings:["ramen noodles","chicken","soy sauce","miso","egg","nori","green onion"],diet:["dairy-free"],instructions:"Simmer broth with miso and soy sauce. Cook noodles. Poach eggs. Assemble with toppings."},
+  {id:9,emoji:"🥘",title:"Shakshuka",time:"30 mins",diff:"Easy",ings:["eggs","tomatoes","onion","bell pepper","cumin","paprika","feta"],diet:["vegetarian","gluten-free"],instructions:"Sauté onions and peppers. Add tomatoes and spices, simmer 10 mins. Crack eggs in, cover and cook. Top with feta."},
+  {id:10,emoji:"🍣",title:"Salmon Teriyaki",time:"25 mins",diff:"Easy",ings:["salmon","soy sauce","mirin","honey","garlic","rice","edamame"],diet:["gluten-free","dairy-free"],instructions:"Make teriyaki glaze. Marinate salmon 15 mins. Pan-fry basting with glaze. Serve with rice."},
+  {id:11,emoji:"🌯",title:"Falafel Wrap",time:"35 mins",diff:"Medium",ings:["chickpeas","flour","cumin","parsley","pita","tahini","lettuce","tomato"],diet:["vegetarian","vegan","dairy-free"],instructions:"Blend chickpeas with herbs. Form balls and fry until golden. Fill pita with falafel, lettuce, tomato, and tahini."},
+  {id:12,emoji:"🍝",title:"Mushroom Risotto",time:"40 mins",diff:"Hard",ings:["arborio rice","mushrooms","onion","white wine","parmesan","butter","thyme"],diet:["vegetarian","gluten-free"],instructions:"Sauté onions and mushrooms. Add rice, stir to coat. Add wine. Gradually add warm broth stirring constantly. Finish with butter and parmesan."},
+  {id:13,emoji:"🥩",title:"Beef Tacos",time:"25 mins",diff:"Easy",ings:["ground beef","tortillas","taco seasoning","cheese","lettuce","salsa","sour cream"],diet:["gluten-free"],instructions:"Brown beef with taco seasoning. Warm tortillas. Assemble with your favourite toppings."},
+  {id:14,emoji:"🍲",title:"Butternut Squash Soup",time:"50 mins",diff:"Easy",ings:["butternut squash","onion","apple","coconut milk","ginger","vegetable broth"],diet:["vegetarian","vegan","gluten-free","dairy-free"],instructions:"Roast squash. Sauté onion, apple, ginger. Blend with squash and broth. Stir in coconut milk."},
+  {id:15,emoji:"🍗",title:"Lemon Herb Chicken",time:"45 mins",diff:"Medium",ings:["chicken thighs","lemon","garlic","rosemary","thyme","olive oil","potatoes"],diet:["gluten-free","dairy-free"],instructions:"Marinate chicken with lemon, garlic, and herbs. Roast with potatoes at 400°F for 40 mins."},
+  {id:16,emoji:"🥞",title:"Fluffy Blueberry Pancakes",time:"20 mins",diff:"Easy",ings:["flour","eggs","milk","blueberries","butter","maple syrup","baking powder"],diet:["vegetarian"],instructions:"Mix dry ingredients, whisk wet separately. Combine until just mixed. Fold in blueberries. Cook on buttered griddle until bubbles form, then flip."},
+  {id:17,emoji:"🍱",title:"Tofu Fried Rice",time:"20 mins",diff:"Easy",ings:["rice","tofu","soy sauce","sesame oil","peas","carrots","egg","green onion"],diet:["vegetarian","dairy-free"],instructions:"Fry tofu until golden. Scramble eggs. Add rice, vegetables, and tofu. Toss with soy sauce and sesame oil."},
+  {id:18,emoji:"🫕",title:"Tuscan White Bean Stew",time:"35 mins",diff:"Easy",ings:["cannellini beans","kale","tomatoes","garlic","rosemary","parmesan"],diet:["vegetarian","gluten-free"],instructions:"Sauté garlic and rosemary. Add tomatoes and beans, simmer 20 mins. Stir in kale. Serve with parmesan."},
+  {id:19,emoji:"🍤",title:"Coconut Shrimp Curry",time:"30 mins",diff:"Medium",ings:["shrimp","coconut milk","curry powder","tomatoes","onion","garlic","rice"],diet:["gluten-free","dairy-free"],instructions:"Sauté onion and garlic. Add curry powder. Add tomatoes and coconut milk. Simmer 10 mins. Add shrimp and cook until pink."},
+  {id:20,emoji:"🥑",title:"Avocado Toast",time:"10 mins",diff:"Easy",ings:["sourdough bread","avocado","lemon","red pepper flakes","poached egg","microgreens"],diet:["vegetarian","dairy-free"],instructions:"Toast bread. Mash avocado with lemon and red pepper flakes. Spread on toast. Top with poached egg and microgreens."},
+  {id:21,emoji:"🍮",title:"Crème Brûlée",time:"60 mins",diff:"Hard",ings:["heavy cream","egg yolks","sugar","vanilla bean"],diet:["vegetarian","gluten-free"],instructions:"Heat cream with vanilla. Whisk yolks and sugar, temper with cream. Bake in water bath 40 mins. Chill, then caramelize sugar topping."},
+  {id:22,emoji:"🍰",title:"Classic Cheesecake",time:"75 mins",diff:"Hard",ings:["cream cheese","eggs","sugar","sour cream","graham crackers","butter","vanilla"],diet:["vegetarian"],instructions:"Make crust from crackers and butter. Beat cream cheese with sugar, eggs, sour cream, and vanilla. Bake in water bath. Chill overnight."},
+];
+
+const GRADIENTS = [
+  "linear-gradient(135deg,#E8611A,#F4874B)",
+  "linear-gradient(135deg,#C04D0E,#E8611A)",
+  "linear-gradient(135deg,#4A7C59,#6BAF7E)",
+  "linear-gradient(135deg,#8B6914,#C4982A)",
+  "linear-gradient(135deg,#A0522D,#CD853F)",
+  "linear-gradient(135deg,#6B3A2A,#A0522D)",
+];
+
+const EMOJIS = ["🍝","🥗","🍛","🥦","🍲","🍳","🌮","🍜","🥘","🍣","🌯","🍗","🥞","🍱","🫕","🥑","🍮","🍰"];
+
+let allRecipes = [...RECIPES];
+let favorites = [];
+let activeFilters = [];
+let showFavs = false;
+let visibleCount = 8;
+let selectedRecipeId = null;
+let selectedEmoji = "🍽️";
+
+function getFiltered() {
+  let r = allRecipes;
+  if (showFavs) r = r.filter(x => favorites.includes(x.id));
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (q) {
+    const terms = q.split(',').map(s => s.trim()).filter(Boolean);
+    r = r.filter(x => terms.some(t => x.ings.some(i => i.toLowerCase().includes(t)) || x.title.toLowerCase().includes(t)));
+  }
+  if (activeFilters.length > 0) {
+    r = r.filter(x => activeFilters.every(f => x.diet.includes(f)));
+  }
+  return r;
+}
+
+function render() {
+  const filtered = getFiltered();
+  const toShow = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - visibleCount;
+  document.getElementById('resultsCount').textContent = filtered.length;
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = toShow.map((r, i) => cardHTML(r, i)).join('');
+  document.getElementById('emptyState').classList.toggle('hidden', toShow.length > 0);
+  document.getElementById('showMoreWrap').classList.toggle('hidden', remaining <= 0);
+  document.getElementById('remainingCount').textContent = remaining;
+  if (toShow.length === 0) {
+    const q = document.getElementById('searchInput').value.trim();
+    document.getElementById('emptyMsg').textContent = q ? `No recipes match "${q}" — try different ingredients.` : showFavs ? "You haven't saved any favorites yet!" : "No recipes match your current filters.";
+  }
+}
+
+function cardHTML(r, i) {
+  const bg = GRADIENTS[i % GRADIENTS.length];
+  const isFav = favorites.includes(r.id);
+  const diffClass = r.diff === 'Easy' ? 'diff-easy' : r.diff === 'Medium' ? 'diff-medium' : 'diff-hard';
+  const tags = r.diet.map(d => `<span class="diet-tag ${d}">${d}</span>`).join('');
+  return `<div class="card" style="animation-delay:${i * 0.06}s" onclick="openRecipe(${r.id})">
+    <div class="card-img" style="background:${bg}">
+      <span>${r.emoji}</span>
+      <button class="fav-btn" title="${isFav ? 'Remove favorite' : 'Add to favorites'}" onclick="event.stopPropagation();toggleFavId(${r.id})">${isFav ? '❤️' : '🤍'}</button>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${r.title}</div>
+      <div class="card-meta"><span class="card-time">⏱ ${r.time}</span><span class="diff-badge ${diffClass}">${r.diff}</span></div>
+      <div class="card-ings"><strong>Ingredients:</strong>${r.ings.slice(0,4).join(', ')}${r.ings.length > 4 ? '...' : ''}</div>
+      ${tags ? `<div class="diet-tags">${tags}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function handleSearch() {
+  visibleCount = 8;
+  const q = document.getElementById('searchInput').value.trim();
+  document.getElementById('searchClear').classList.toggle('hidden', !q);
+  const badge = document.getElementById('searchBadge');
+  if (q) {
+    badge.classList.remove('hidden');
+    badge.innerHTML = `🔍 Searching for: "${q}" <button onclick="clearSearch()">✕</button>`;
+  } else {
+    badge.classList.add('hidden');
+  }
+  render();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  handleSearch();
+}
+
+function toggleFilter(f) {
+  const btn = document.getElementById('btn-' + f);
+  if (activeFilters.includes(f)) {
+    activeFilters = activeFilters.filter(x => x !== f);
+    btn.classList.remove('active');
+  } else {
+    activeFilters.push(f);
+    btn.classList.add('active');
+  }
+  visibleCount = 8;
+  render();
+}
+
+function toggleFav() {
+  showFavs = !showFavs;
+  const btn = document.getElementById('btn-fav');
+  btn.classList.toggle('active-fav', showFavs);
+  btn.textContent = showFavs ? `❤️ My Favorites (${favorites.length})` : `🤍 My Favorites`;
+  visibleCount = 8;
+  render();
+}
+
+function toggleFavId(id) {
+  if (favorites.includes(id)) {
+    favorites = favorites.filter(x => x !== id);
+  } else {
+    favorites.push(id);
+  }
+  if (selectedRecipeId === id) {
+    document.getElementById('modalFavBtn').textContent = favorites.includes(id) ? '❤️' : '🤍';
+  }
+  const favBtn = document.getElementById('btn-fav');
+  favBtn.textContent = showFavs ? `❤️ My Favorites (${favorites.length})` : `🤍 My Favorites`;
+  render();
+}
+
+function toggleFavById() {
+  if (selectedRecipeId) toggleFavId(selectedRecipeId);
+}
+
+function showMore() {
+  visibleCount += 8;
+  render();
+}
+
+function resetAll() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchBadge').classList.add('hidden');
+  document.getElementById('searchClear').classList.add('hidden');
+  activeFilters = [];
+  showFavs = false;
+  visibleCount = 8;
+  ['vegetarian','vegan','gluten-free','dairy-free'].forEach(f => document.getElementById('btn-' + f).classList.remove('active'));
+  document.getElementById('btn-fav').classList.remove('active-fav');
+  document.getElementById('btn-fav').textContent = '🤍 My Favorites';
+  render();
+}
+
+function openRecipe(id) {
+  const r = allRecipes.find(x => x.id === id);
+  if (!r) return;
+  selectedRecipeId = id;
+  document.getElementById('modalEmoji').textContent = r.emoji;
+  document.getElementById('modalTitle').textContent = r.title;
+  const diffClass = r.diff === 'Easy' ? 'diff-easy' : r.diff === 'Medium' ? 'diff-medium' : 'diff-hard';
+  document.getElementById('modalMeta').innerHTML = `<span style="font-size:0.85rem;color:#8a6548">⏱ ${r.time}</span><span class="diff-badge ${diffClass}">${r.diff}</span>${r.diet.map(d => `<span class="diet-tag ${d}">${d}</span>`).join('')}`;
+  document.getElementById('modalIngredients').innerHTML = r.ings.map(i => `<li>${i.charAt(0).toUpperCase() + i.slice(1)}</li>`).join('');
+  document.getElementById('modalInstructions').textContent = r.instructions;
+  document.getElementById('modalFavBtn').textContent = favorites.includes(id) ? '❤️' : '🤍';
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+  if (id === 'detailModal') selectedRecipeId = null;
+}
+
+function openAddModal() {
+  const picker = document.getElementById('emojiPicker');
+  picker.innerHTML = EMOJIS.map(e => `<button class="emoji-opt${e === selectedEmoji ? ' selected' : ''}" onclick="selectEmoji('${e}')">${e}</button>`).join('');
+  ['inp-title','inp-time','inp-ings','inp-instr'].forEach(id => document.getElementById(id).value = '');
+  ['chk-veg','chk-vegan','chk-gf','chk-df'].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById('addModal').classList.remove('hidden');
+}
+
+function selectEmoji(e) {
+  selectedEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(btn => btn.classList.toggle('selected', btn.textContent === e));
+}
+
+function addRecipe() {
+  const title = document.getElementById('inp-title').value.trim();
+  const ings = document.getElementById('inp-ings').value.trim();
+  if (!title || !ings) { alert('Please fill in recipe name and ingredients.'); return; }
+  const diet = [];
+  if (document.getElementById('chk-veg').checked) diet.push('vegetarian');
+  if (document.getElementById('chk-vegan').checked) diet.push('vegan');
+  if (document.getElementById('chk-gf').checked) diet.push('gluten-free');
+  if (document.getElementById('chk-df').checked) diet.push('dairy-free');
+  allRecipes.unshift({
+    id: Date.now(),
+    emoji: selectedEmoji,
+    title,
+    time: document.getElementById('inp-time').value || '30 mins',
+    diff: document.getElementById('inp-diff').value,
+    ings: ings.split(',').map(s => s.trim()).filter(Boolean),
+    diet,
+    instructions: document.getElementById('inp-instr').value || 'Enjoy your recipe!'
+  });
+  visibleCount = Math.max(visibleCount, 1);
+  closeModal('addModal');
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
